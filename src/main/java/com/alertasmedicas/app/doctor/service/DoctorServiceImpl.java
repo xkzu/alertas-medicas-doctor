@@ -65,9 +65,8 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public DoctorDTO getDoctorAsDTO(Long id) {
-        Doctor doctor = doctorRepository.findById(id)
-                .orElse(new Doctor());
+    public DoctorDTO getDoctorAsDTO(String email) {
+        Doctor doctor = doctorRepository.findByEmail(email);
         return DoctorMapper.toDoctorDTO(doctor);
     }
 

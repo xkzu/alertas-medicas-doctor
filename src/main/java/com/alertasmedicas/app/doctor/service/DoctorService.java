@@ -22,7 +22,7 @@ public interface DoctorService {
 
     DoctorDTO saveDoctorAsDTO(DoctorDTO doctorDTO);
 
-    DoctorDTO getDoctorAsDTO(Long id);
+    DoctorDTO getDoctorAsDTO(String email);
 
     void deleteDoctorAsDTO(Long id);
 }

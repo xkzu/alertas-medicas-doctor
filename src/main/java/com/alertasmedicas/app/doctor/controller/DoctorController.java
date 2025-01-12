@@ -40,11 +40,11 @@ public class DoctorController {
         }
     }
 
-    @GetMapping("/getDoctor/{id}")
-    public ResponseEntity<DoctorDTO> getDoctor(@PathVariable Long id) {
-        log.info("Obteniendo doctor con id: {}", id);
+    @GetMapping("/getDoctor/{email}")
+    public ResponseEntity<DoctorDTO> getDoctor(@PathVariable String email) {
+        log.info("Obteniendo doctor con email: {}", email);
         try {
-            DoctorDTO dto = doctorService.getDoctorAsDTO(id);
+            DoctorDTO dto = doctorService.getDoctorAsDTO(email);
             log.info("Doctor obtenido exitosamente: {}", dto);
             return ResponseEntity.ok(dto);
         } catch (Exception e) {
@@ -79,5 +79,6 @@ public class DoctorController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
 
 }
