@@ -1,6 +1,5 @@
 package com.alertasmedicas.app.doctor.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,7 +14,7 @@ import lombok.ToString;
 
 @Getter
 @Setter
-@ToString(exclude = "password")
+@ToString
 @Entity
 @Table(name = "doctor")
 @NoArgsConstructor
@@ -35,10 +34,6 @@ public class Doctor {
 
     @Column(name = "correo", nullable = false)
     private String email;
-
-    @Column(name = "password", nullable = false)
-    @JsonIgnore
-    private String password;
 
     @Column(name = "admin")
     private boolean isAdmin = false;

@@ -13,7 +13,6 @@ public class DoctorMapper {
                 doctor.getName(),
                 doctor.getSpeciality(),
                 doctor.getEmail(),
-                doctor.getPassword(),
                 doctor.isAdmin()
         );
     }
@@ -24,7 +23,6 @@ public class DoctorMapper {
                 dto.name(),
                 dto.speciality(),
                 dto.email(),
-                dto.password(),
                 dto.isAdmin()
         );
     }
