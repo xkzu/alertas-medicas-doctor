@@ -16,7 +16,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @Entity
-@Table(name = "doctor")
+@Table(name = "doctor", schema = "admin")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Doctor {
