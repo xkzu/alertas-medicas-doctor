@@ -1,0 +1,87 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    tags:
+      # Se activa con tags semánticos
+      - 'v*.*.*'
+
+env:
+  DOCKER_IMAGE_NAME: ecodisonante/cloudnative.doctor
+
+jobs:
+  build-and-deploy:
+    # Solo se ejecute en la rama dev
+    # if: github.ref == 'refs/heads/dev' 
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout del repositorio
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Configurar `TAG` en el entorno
+      - name: Set TAG from GitHub ref
+        run: echo "TAG=$(echo $GITHUB_REF | sed 's/refs\/tags\///')" >> $GITHUB_ENV
+      
+      # 3. Configurar acceso a Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      # 4. Construir la imagen Docker
+      - name: Build Docker image
+        run: |
+          docker build \
+            --file ./Dockerfile \
+            --tag $DOCKER_IMAGE_NAME:$TAG \
+            .
+
+      # 4. Subir la imagen a Docker Hub
+      - name: Push Docker image
+        run: |
+          docker push $DOCKER_IMAGE_NAME:$TAG
+
+       # 5. Despliegue en el servidor AWS
+      - name: Deploy to AWS Server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.AWS_SERVER_IP }}
+          username: ${{ secrets.AWS_SERVER_USER }}
+          key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+          port: 22
+          envs: DOCKER_IMAGE_NAME,TAG
+          script: |
+            echo "DOCKER_IMAGE_NAME: $DOCKER_IMAGE_NAME"
+            echo "TAG: $TAG"
+
+            # Descargar la imagen
+            sudo docker pull $DOCKER_IMAGE_NAME:$TAG
+
+            # Detener y eliminar el contenedor existente si existe
+            if [ $(sudo docker ps -a -q -f name=doctor-service) ]; then
+              echo "Deteniendo y eliminando el contenedor 'doctor-service'..."
+              sudo docker stop doctor-service
+              sudo docker rm doctor-service
+            else
+              echo "El contenedor 'doctor-service' no existe, continuando..."
+            fi
+
+            # Ejecutar el nuevo contenedor
+            sudo docker run -d --name doctor-service \
+              -p 8084:8084 \
+              --env "cors.allowed-origins=http://localhost:4200,http://54.165.184.60:4200" \
+              --env "server.port=8081" \
+              --env "spring.application.name=doctor-service" \
+              --env "spring.datasource.driver-class-name=oracle.jdbc.OracleDriver" \
+              --env "spring.datasource.url=jdbc:oracle:thin:@cloudnative_high?TNS_ADMIN=wallet" \
+              --env "spring.datasource.username=user_doctor" \
+              --env "spring.datasource.password=NativeCloud2025" \
+              --env "spring.datasource.hikari.maximum-pool-size=10" \
+              --env "spring.datasource.hikari.connection-timeout=30000" \
+              --env "spring.jpa.show-sql=true" \
+              --env "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.OracleDialect" \
+              --env "spring.jpa.hibernate.ddl-auto=none" \
+              "$DOCKER_IMAGE_NAME:$TAG"
